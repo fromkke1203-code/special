@@ -385,33 +385,84 @@ function showPage(name) {
    ========================================================= */
 function setupMusic() {
   const audio = $('bgm');
+  const sound = $('sound');
   const soundBtn = $('soundBtn');
+  const panel = $('volumePanel');
+  const muteBtn = $('muteBtn');
+  const slider = $('volumeSlider');
+  const valueEl = $('volumeValue');
   const overlay = $('startOverlay');
   let started = false;
   let musicOk = !!CONFIG.songUrl;
+  let gainNode = null;                 // 아이폰은 audio.volume 을 무시해서 Web Audio 로 음량을 조절합니다
+  let audioCtx = null;
 
   const begin = () => { if (!started) { started = true; overlay.hidden = true; $('nav').hidden = false; playHeart(); } };
 
+  const icon = () => {
+    const v = audio.muted ? 0 : slider.value / 100;
+    soundBtn.textContent = v === 0 ? '🔇' : v < 0.5 ? '🔉' : '🔊';
+  };
+  const setVolume = (v) => {             // v: 0 ~ 1
+    v = Math.max(0, Math.min(1, v));
+    if (gainNode) gainNode.gain.value = v;
+    audio.volume = v;
+    valueEl.textContent = Math.round(v * 100);
+    icon();
+  };
+  const connectGain = () => {
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      audioCtx = new Ctx();
+      const src = audioCtx.createMediaElementSource(audio);
+      gainNode = audioCtx.createGain();
+      src.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+    } catch (e) { gainNode = null; }
+  };
+  // 화면을 껐다 켜거나 다른 앱에 다녀오면 소리 경로를 다시 깨웁니다
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  });
+
   if (CONFIG.songUrl) {
-    // 하트를 누르기 전에 미리 받아 두어 누르는 순간 바로 나오게 합니다
-    audio.src = CONFIG.songUrl;
-    audio.volume = CONFIG.volume;
+    audio.src = CONFIG.songUrl;        // 하트를 누르기 전에 미리 받아 둡니다
     audio.load();
-    audio.addEventListener('error', () => { musicOk = false; });   // 파일이 없으면 노래 없이 진행
+    audio.addEventListener('error', () => { musicOk = false; });
   }
 
+  slider.value = Math.round(CONFIG.volume * 100);
+  valueEl.textContent = slider.value;
+
   soundBtn.addEventListener('click', () => {
+    panel.hidden = !panel.hidden;
+    soundBtn.classList.toggle('is-open', !panel.hidden);
+  });
+  slider.addEventListener('input', () => {
+    if (audio.muted && slider.value > 0) { audio.muted = false; muteBtn.classList.remove('is-muted'); }
+    setVolume(slider.value / 100);
+  });
+  muteBtn.addEventListener('click', () => {
     audio.muted = !audio.muted;
-    soundBtn.textContent = audio.muted ? '🔇' : '🔊';
-    soundBtn.setAttribute('aria-label', audio.muted ? '소리 켜기' : '소리 끄기');
+    muteBtn.classList.toggle('is-muted', audio.muted);
+    muteBtn.setAttribute('aria-label', audio.muted ? '소리 켜기' : '소리 끄기');
+    icon();
+  });
+  // 조절 막대 바깥을 누르면 닫힘
+  document.addEventListener('click', (e) => {
+    if (!panel.hidden && !sound.contains(e.target)) { panel.hidden = true; soundBtn.classList.remove('is-open'); }
   });
 
   // 하트를 누르는 순간: 그 터치 덕분에 브라우저가 소리를 허용 → 노래 시작 + 하트 시작
   $('startBtn').addEventListener('click', () => {
     if (musicOk) {
+      connectGain();
+      setVolume(slider.value / 100);
       audio.play().then(() => {
         state.musicOn = true;
-        soundBtn.hidden = false;
+        sound.hidden = false;
       }).catch(() => { /* 노래가 안 되면 조용히 진행 */ });
     }
     begin();

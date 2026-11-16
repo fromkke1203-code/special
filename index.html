@@ -67,8 +67,15 @@
     <button class="nav-btn" id="toHeartBtn" type="button" hidden>← 하트 보기</button>
   </nav>
 
-  <!-- 소리 켜기/끄기 -->
-  <button class="sound-btn" id="soundBtn" type="button" aria-label="소리 끄기" hidden>🔊</button>
+  <!-- 소리: 버튼을 누르면 음량 조절 막대가 나옵니다 -->
+  <div class="sound" id="sound" hidden>
+    <button class="sound-btn" id="soundBtn" type="button" aria-label="음량 조절 열기">🔊</button>
+    <div class="volume-panel" id="volumePanel" hidden>
+      <button class="mute-btn" id="muteBtn" type="button" aria-label="소리 끄기">🔇</button>
+      <input class="volume-slider" id="volumeSlider" type="range" min="0" max="100" step="1" value="70" aria-label="음량">
+      <span class="volume-value" id="volumeValue">70</span>
+    </div>
+  </div>
 
   <audio id="bgm" loop preload="auto"></audio>
 

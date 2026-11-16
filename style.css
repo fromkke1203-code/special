@@ -471,20 +471,85 @@ body {
 .nav-btn[hidden] { display: none; }
 .nav[hidden] { display: none; }
 
-.sound-btn {
+.sound {
   position: fixed;
   top: max(14px, env(safe-area-inset-top));
   right: 14px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.sound[hidden] { display: none; }
+.sound-btn,
+.mute-btn {
   width: 42px;
   height: 42px;
   border-radius: 50%;
   border: 1px solid rgba(255, 163, 207, 0.5);
   background: rgba(40, 8, 28, 0.55);
   font-size: 18px;
+  line-height: 1;
   cursor: pointer;
-  z-index: 20;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
 }
-.sound-btn[hidden] { display: none; }
+.sound-btn.is-open { background: rgba(255, 91, 141, 0.35); }
+.volume-panel {
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+  padding: 8px 12px 8px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 163, 207, 0.5);
+  background: rgba(40, 8, 28, 0.7);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+.volume-panel[hidden] { display: none; }
+.mute-btn { width: 34px; height: 34px; font-size: 15px; margin-right: 8px; }
+.mute-btn.is-muted { background: rgba(255, 91, 141, 0.4); }
+.volume-slider {
+  width: 130px;
+  height: 28px;
+  margin: 0;
+  accent-color: var(--rose);
+  cursor: pointer;
+  background: transparent;
+}
+.volume-value {
+  width: 30px;
+  margin-left: 6px;
+  font-family: var(--font-soft);
+  font-size: 0.9rem;
+  color: var(--cream);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+/* 슬라이더 모양 (사파리/크롬 공통) */
+.volume-slider { -webkit-appearance: none; appearance: none; }
+.volume-slider::-webkit-slider-runnable-track {
+  height: 6px; border-radius: 999px;
+  background: linear-gradient(to right, var(--pink), var(--rose));
+}
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 22px; height: 22px; margin-top: -8px;
+  border-radius: 50%; border: 2px solid #fff;
+  background: var(--rose);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+.volume-slider::-moz-range-track {
+  height: 6px; border-radius: 999px;
+  background: linear-gradient(to right, var(--pink), var(--rose));
+}
+.volume-slider::-moz-range-thumb {
+  width: 20px; height: 20px;
+  border-radius: 50%; border: 2px solid #fff;
+  background: var(--rose);
+}
 
 @media (max-width: 480px) {
   .letter-body { padding: 30px 20px 50px; }

@@ -30,7 +30,7 @@
 ## 바꿀 수 있는 값 (`script.js` 맨 위 `CONFIG`)
 
 - `songUrl` 노래 파일 경로 (`''` 로 두면 노래 없음)
-- `volume` 볼륨 (0 ~ 1)
+- `volume` 처음 음량 (0 ~ 1). 사이트 안에서도 오른쪽 위 스피커 버튼을 누르면 막대로 조절하거나 끌 수 있습니다.
 - `secondsBeforeLetter` 하트 완성 후 편지로 넘어가기까지의 초
 - `heartWordCount` 하트를 이루는 단어 개수
 - `batchIntervalMs` 단어 묶음이 날아오는 간격
