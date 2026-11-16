@@ -393,9 +393,10 @@ body {
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
 }
 
-.paper-lines {
-  position: absolute;
-  top: 0; right: 0; bottom: 0; left: 0;
+.letter-body {
+  position: relative;
+  padding: 34px 32px 28px;
+  /* 줄무늬를 글 영역 자체에 그려서 글이 길어져도 끝까지 줄이 이어집니다 */
   background: repeating-linear-gradient(
     to bottom,
     transparent 0,
@@ -403,13 +404,7 @@ body {
     var(--paper-line) 37px,
     var(--paper-line) 38px
   );
-  background-position: 0 30px;
-  pointer-events: none;
-}
-
-.letter-body {
-  position: relative;
-  padding: 34px 32px 60px;
+  background-position: 0 31px;
   font-family: var(--font-hand);
   font-size: clamp(1.35rem, 4.6vw, 1.75rem);
   line-height: 38px;
@@ -557,7 +552,7 @@ body {
 }
 
 @media (max-width: 480px) {
-  .letter-body { padding: 30px 20px 50px; }
+  .letter-body { padding: 30px 20px 24px; }
   .envelope-seal { width: 38px; height: 38px; margin-left: -19px; line-height: 38px; font-size: 18px; }
 }
 
