@@ -127,8 +127,10 @@ async function findPhotos() {
   return found;
 }
 
-// 사진을 한 화면에 띄웁니다. keepOut: 사진이 피해 가야 할 가운데 영역 {left, right}
-function placePhotos(field, imgs, keepOut) {
+// 사진을 한 화면에 띄웁니다.
+// keepOut: 사진이 피해 가야 할 가운데 영역 {left, right}
+// allowEdges: 옆자리가 없을 때 가장자리에 걸쳐서라도 띄울지 (false 면 아예 띄우지 않음)
+function placePhotos(field, imgs, keepOut, allowEdges) {
   const small = Math.min(innerWidth, innerHeight) < 500;
   const n = imgs.length;
   const W = innerWidth;
@@ -143,17 +145,23 @@ function placePhotos(field, imgs, keepOut) {
     inner.appendChild(img);
     wrap.appendChild(inner);
 
-    const size = small ? rand(74, 96) : rand(110, 160);
+    let size = small ? rand(74, 96) : rand(110, 160);
     // 가운데(하트/편지지) 좌우의 빈 공간으로만 지나가게 자리 배정
-    const leftRoom = keepOut.left - size - 8;
-    const rightRoom = W - keepOut.right - size - 8;
+    // 흔들림(좌우 6px, 기울기)까지 감안해 가운데 영역과 24px 띄웁니다
+    const gap = 24;
+    const sideRoom = Math.max(keepOut.left, W - keepOut.right) - gap - 8;
+    if (!allowEdges && sideRoom < size) size = Math.max(56, sideRoom);   // 자리가 좁으면 사진을 줄여서라도
+    const leftRoom = keepOut.left - size - gap - 8;
+    const rightRoom = W - keepOut.right - size - gap - 8;
     const sides = [];
     if (leftRoom >= 0) sides.push('L');
     if (rightRoom >= 0) sides.push('R');
     let x, opacity = CONFIG.photoOpacity;
     if (sides.length) {
       const side = sides[i % sides.length];
-      x = side === 'L' ? rand(8, 8 + leftRoom) : rand(keepOut.right + 8, keepOut.right + 8 + rightRoom);
+      x = side === 'L' ? rand(8, 8 + leftRoom) : rand(keepOut.right + gap + 8, keepOut.right + gap + 8 + rightRoom);
+    } else if (!allowEdges) {
+      return;                                   // 편지지를 가리느니 이 화면에서는 띄우지 않습니다
     } else {
       // 좁은 휴대폰: 양쪽 가장자리에 살짝 걸치게 하고 조금 투명하게
       x = i % 2 === 0 ? rand(-size * 0.4, 0) : rand(W - size * 0.6, W - size * 0.35);
@@ -177,11 +185,11 @@ async function startPhotos() {
   if (!imgs.length) return;
   // 1페이지: 하트 좌우
   const stage = $('heartStage').getBoundingClientRect();
-  placePhotos($('photoField'), imgs, { left: stage.left, right: stage.right });
+  placePhotos($('photoField'), imgs, { left: stage.left, right: stage.right }, true);
   // 2페이지: 펼쳐진 편지지 좌우 (편지지 폭 = min(92vw, 560px), 가운데 정렬)
   const paperW = Math.min(innerWidth * 0.92, 560);
   const left = (innerWidth - paperW) / 2;
-  placePhotos($('photoFieldLetter'), imgs, { left, right: left + paperW });
+  placePhotos($('photoFieldLetter'), imgs, { left, right: left + paperW }, false);
 }
 
 /* =========================================================
