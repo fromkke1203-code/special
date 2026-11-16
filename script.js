@@ -199,17 +199,34 @@ function placePhotos(field, imgs, keepOut, allowEdges) {
   });
 }
 
-async function startPhotos() {
-  const imgs = await findPhotos();
-  if (!imgs.length) return;
+let photoImgs = null;          // 한 번 찾은 사진은 계속 재사용 (다시 보기 때 또 불러오지 않음)
+
+function layoutPhotos() {
+  if (!photoImgs || !photoImgs.length) return;
+  const heartField = $('photoField'), letterField = $('photoFieldLetter');
+  heartField.innerHTML = '';
+  letterField.innerHTML = '';
   // 1페이지: 하트 좌우
   const stage = $('heartStage').getBoundingClientRect();
-  placePhotos($('photoField'), imgs, { left: stage.left, right: stage.right }, true);
+  placePhotos(heartField, photoImgs, { left: stage.left, right: stage.right }, true);
   // 2페이지: 펼쳐진 편지지 좌우 (편지지 폭 = min(92vw, 560px), 가운데 정렬)
   const paperW = Math.min(innerWidth * 0.92, 560);
   const left = (innerWidth - paperW) / 2;
-  placePhotos($('photoFieldLetter'), imgs, { left, right: left + paperW }, false);
+  placePhotos(letterField, photoImgs, { left, right: left + paperW }, false);
 }
+
+async function startPhotos() {
+  if (photoImgs) return;                 // 이미 띄워져 있으면 그대로 둡니다
+  photoImgs = await findPhotos();
+  layoutPhotos();
+}
+
+// 화면을 돌리거나 크기가 바뀌면 사진 자리를 다시 잡습니다
+let photoResizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(photoResizeTimer);
+  photoResizeTimer = setTimeout(layoutPhotos, 400);
+});
 
 /* =========================================================
    1페이지: 사랑해 하트
@@ -499,6 +516,7 @@ async function playLetter() {
   state.letterPlayed = true;
   state.letterPlaying = false;
   $('replayBtn').hidden = false;
+  updateNavSpace();
 }
 
 // 편지가 끝나면 화면 가득 하트가 흩날리고, 편지지 맨 아래에 마지막 한 줄이 떠오릅니다
@@ -537,6 +555,7 @@ function resetShow() {
   clearTimeout(state.autoTimer);
   $('finaleRain').innerHTML = '';
   $('replayBtn').hidden = true;
+  updateNavSpace();
 
   // 하트
   const stage = $('heartStage');
@@ -571,6 +590,14 @@ function resetShow() {
 /* =========================================================
    페이지 전환
    ========================================================= */
+// 아래 버튼 묶음의 실제 높이를 CSS 에 알려 줘서 편지지가 버튼과 겹치지 않게 합니다
+function updateNavSpace() {
+  const nav = $('nav');
+  const h = nav.hidden ? 44 : nav.offsetHeight;
+  document.documentElement.style.setProperty('--nav-h', h + 'px');
+}
+window.addEventListener('resize', updateNavSpace);
+
 function showPage(name) {
   if (state.page === name) return;
   state.page = name;
@@ -580,6 +607,7 @@ function showPage(name) {
   $('toLetterBtn').hidden = name !== 'heart';
   $('toHeartBtn').hidden = name !== 'letter';
   $('replayBtn').hidden = !state.letterPlayed;
+  updateNavSpace();
   if (name === 'letter') playLetter();   // 이미 다 썼으면 그대로 보여주기만
 }
 
@@ -600,7 +628,7 @@ function setupMusic() {
   let gainNode = null;                 // 아이폰은 audio.volume 을 무시해서 Web Audio 로 음량을 조절합니다
   let audioCtx = null;
 
-  const begin = () => { if (!started) { started = true; overlay.hidden = true; $('nav').hidden = false; playHeart(); } };
+  const begin = () => { if (!started) { started = true; overlay.hidden = true; $('nav').hidden = false; updateNavSpace(); playHeart(); } };
 
   const icon = () => {
     const v = audio.muted ? 0 : slider.value / 100;
@@ -626,9 +654,10 @@ function setupMusic() {
     } catch (e) { gainNode = null; }
   };
   // 화면을 껐다 켜거나 다른 앱에 다녀오면 소리 경로를 다시 깨웁니다
-  document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-  });
+  const wake = () => { if (audioCtx && audioCtx.state !== 'running') audioCtx.resume().catch(() => {}); };
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) wake(); });
+  document.addEventListener('touchend', wake, { passive: true });
+  document.addEventListener('click', wake);
 
   if (CONFIG.songUrl) {
     audio.src = CONFIG.songUrl;        // 하트를 누르기 전에 미리 받아 둡니다
