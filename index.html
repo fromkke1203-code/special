@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>서연아, 생일 축하해</title>
+  <meta name="description" content="서연이의 8번째 생일을 위한 작은 선물">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&family=Gowun+Dodum&family=Noto+Sans+KR:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- 배경에 떠다니는 작은 하트 -->
+  <div class="floating-hearts" id="floatingHearts" aria-hidden="true"></div>
+
+  <!-- 노래 자동재생이 막혔을 때만 보이는 시작 화면 -->
+  <div class="start-overlay" id="startOverlay" hidden>
+    <button class="start-btn" id="startBtn" type="button">
+      <span class="start-heart">💝</span>
+      <span>눌러서 열어보기</span>
+    </button>
+  </div>
+
+  <!-- 1페이지: 하트 -->
+  <section class="page page-heart is-active" id="pageHeart">
+    <div class="heart-stage" id="heartStage" aria-label="여러 나라 말로 쓴 사랑해로 만든 하트"></div>
+    <h1 class="birthday-text" id="birthdayText">
+      <span>서연아</span> <span>8번째</span> <span>생일</span> <span>축하해</span> <span class="cake">🎂</span>
+    </h1>
+  </section>
+
+  <!-- 2페이지: 편지 봉투와 편지지 -->
+  <section class="page page-letter" id="pageLetter">
+    <div class="letter-scene" id="letterScene">
+      <div class="envelope" id="envelope">
+        <div class="envelope-back"></div>
+        <div class="letter-paper" id="letterPaper">
+          <div class="paper-lines"></div>
+          <div class="letter-body" id="letterBody"></div>
+          <span class="pen" id="pen" aria-hidden="true">🖊️</span>
+        </div>
+        <div class="envelope-side"></div>
+        <div class="envelope-front"></div>
+        <div class="envelope-flap"></div>
+        <div class="envelope-seal">♥</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 페이지 이동 버튼 -->
+  <nav class="nav">
+    <button class="nav-btn" id="toLetterBtn" type="button">편지 보기 →</button>
+    <button class="nav-btn" id="toHeartBtn" type="button" hidden>← 하트 보기</button>
+  </nav>
+
+  <!-- 소리 켜기/끄기 -->
+  <button class="sound-btn" id="soundBtn" type="button" aria-label="소리 끄기" hidden>🔊</button>
+
+  <audio id="bgm" loop preload="auto"></audio>
+
+  <script src="script.js"></script>
+</body>
+</html>
