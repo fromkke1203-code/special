@@ -20,6 +20,7 @@ html, body {
   padding: 0;
   height: 100%;
   overflow: hidden;
+  overscroll-behavior: none;
 }
 
 body {
@@ -32,7 +33,7 @@ body {
 /* ---------- 배경 하트 ---------- */
 .floating-hearts {
   position: fixed;
-  inset: 0;
+  top: 0; right: 0; bottom: 0; left: 0;
   pointer-events: none;
   overflow: hidden;
   z-index: 0;
@@ -54,13 +55,12 @@ body {
 /* ---------- 시작 화면 ---------- */
 .start-overlay {
   position: fixed;
-  inset: 0;
+  top: 0; right: 0; bottom: 0; left: 0;
   z-index: 50;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 18px;
   padding: 24px;
   background: radial-gradient(ellipse at 50% 40%, rgba(90, 16, 58, 0.92) 0%, rgba(30, 5, 22, 0.97) 70%);
   transition: opacity .7s ease, visibility 0s linear .7s;
@@ -81,6 +81,7 @@ body {
 }
 .start-heart-btn {
   position: relative;
+  margin: 18px 0;
   width: min(62vw, 260px);
   height: min(62vw, 260px);
   padding: 0;
@@ -132,7 +133,7 @@ body {
 /* ---------- 페이지 공통 ---------- */
 .page {
   position: fixed;
-  inset: 0;
+  top: 0; right: 0; bottom: 0; left: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -158,13 +159,11 @@ body {
   width: min(92vw, 62vh, 640px);
   height: min(92vw, 62vh, 640px);
   margin-bottom: 8px;
-  container-type: size;
 }
 .heart-word {
   position: absolute;
   left: var(--x);
   top: var(--y);
-  font-size: calc(var(--fs) * 1cqw);
   font-family: var(--font-soft);
   font-weight: 500;
   white-space: nowrap;
@@ -194,9 +193,10 @@ body {
   margin: 10px 0 0;
   font-family: var(--font-soft);
   font-weight: 400;
-  font-size: clamp(1.5rem, 5.2vw, 2.6rem);
+  font-size: clamp(1.25rem, 5.2vw, 2.6rem);
   letter-spacing: 0.02em;
   text-align: center;
+  white-space: nowrap;
   color: var(--cream);
   text-shadow: 0 2px 18px rgba(255, 110, 160, 0.45);
 }
@@ -230,7 +230,7 @@ body {
 .envelope {
   position: relative;
   width: min(86vw, 520px);
-  aspect-ratio: 1.55 / 1;
+  height: calc(min(86vw, 520px) / 1.55);
   transform-style: preserve-3d;
   transition: transform 1s ease;
 }
@@ -259,12 +259,12 @@ body {
 .envelope-front::after {
   content: '';
   position: absolute;
-  inset: 0;
+  top: 0; right: 0; bottom: 0; left: 0;
   background: linear-gradient(to right, #f6c2d3, #f0aac0);
 }
 .envelope-side {
   position: absolute;
-  inset: 0;
+  top: 0; right: 0; bottom: 0; left: 0;
   z-index: 3;
   pointer-events: none;
   border-radius: 10px;
@@ -274,7 +274,7 @@ body {
 .envelope-side::after {
   content: '';
   position: absolute;
-  inset: 0;
+  top: 0; right: 0; bottom: 0; left: 0;
 }
 .envelope-side::before {
   background: linear-gradient(to right, #f7c6d6, #f1afc4);
@@ -308,7 +308,7 @@ body {
 .envelope-front::after {
   content: '';
   position: absolute;
-  inset: 0;
+  top: 0; right: 0; bottom: 0; left: 0;
   border-radius: 10px;
   background: linear-gradient(to top, rgba(0,0,0,0.06), transparent 40%);
 }
@@ -377,10 +377,13 @@ body {
 }
 .letter-scene.is-expanded > .letter-paper {
   position: fixed;
-  inset: 0;
+  top: calc(56px + env(safe-area-inset-top));          /* 위 소리 버튼, */
+  right: 0; left: 0;
+  bottom: calc(60px + env(safe-area-inset-bottom));   /* 아래 이동 버튼과 겹치지 않게 */
   margin: auto;
   width: min(92vw, 560px);
-  height: min(80vh, 760px);
+  height: min(78vh, 760px);
+  max-height: calc(100vh - 124px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   z-index: 10;
   overflow-y: auto;
   transform-origin: top left;
@@ -390,7 +393,7 @@ body {
 
 .paper-lines {
   position: absolute;
-  inset: 0;
+  top: 0; right: 0; bottom: 0; left: 0;
   background: repeating-linear-gradient(
     to bottom,
     transparent 0,
@@ -446,12 +449,12 @@ body {
   bottom: max(18px, env(safe-area-inset-bottom));
   display: flex;
   justify-content: center;
-  gap: 12px;
   z-index: 20;
   pointer-events: none;
 }
 .nav-btn {
   pointer-events: auto;
+  margin: 0 6px;
   padding: 10px 22px;
   border-radius: 999px;
   border: 1px solid rgba(255, 163, 207, 0.5);
@@ -486,6 +489,17 @@ body {
 @media (max-width: 480px) {
   .letter-body { padding: 30px 20px 50px; }
   .envelope-seal { width: 38px; height: 38px; margin-left: -19px; line-height: 38px; font-size: 18px; }
+}
+
+/* 가로로 눕힌 휴대폰: 하트와 문구를 나란히 */
+@media (max-height: 480px) and (orientation: landscape) {
+  .page-heart { flex-direction: row; padding-bottom: 56px; }
+  .heart-stage { width: min(70vh, 48vw); height: min(70vh, 48vw); margin: 0 24px 0 0; }
+  .birthday-text { margin: 0; font-size: clamp(1.2rem, 4.5vh, 2rem); }
+  .nav { bottom: 8px; }
+  .nav-btn { padding: 7px 16px; font-size: 0.9rem; }
+  .start-heart-btn { width: min(40vh, 160px); height: min(40vh, 160px); margin: 6px 0; }
+  .start-title, .start-hint { font-size: 1rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {

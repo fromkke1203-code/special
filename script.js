@@ -238,7 +238,7 @@ function buildHeart() {
     el.textContent = p.word;
     el.style.setProperty('--x', (p.u * 100).toFixed(2) + '%');
     el.style.setProperty('--y', (p.v * 100).toFixed(2) + '%');
-    el.style.setProperty('--fs', (p.fs * 100).toFixed(2));
+    el.dataset.fs = p.fs;
     el.style.setProperty('--r', p.rot || (rand(-10, 10).toFixed(1) + 'deg'));
     el.style.setProperty('--fr', rand(-220, 220).toFixed(0) + 'deg');
     const ang = rand(0, Math.PI * 2), dist = rand(70, 130);
@@ -248,8 +248,20 @@ function buildHeart() {
     stage.appendChild(el);
     return el;
   });
+  sizeHeartWords();
   return els;
 }
+
+// 무대 크기에 맞춰 글자 크기를 px로 계산 (오래된 브라우저에서도 동일하게 보이도록)
+function sizeHeartWords() {
+  const stage = $('heartStage');
+  const w = stage.clientWidth;
+  stage.querySelectorAll('.heart-word').forEach((el) => {
+    el.style.fontSize = (parseFloat(el.dataset.fs) * w).toFixed(2) + 'px';
+  });
+}
+window.addEventListener('resize', sizeHeartWords);
+window.addEventListener('orientationchange', () => setTimeout(sizeHeartWords, 300));
 
 async function playHeart() {
   const stage = $('heartStage');
