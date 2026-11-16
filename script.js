@@ -7,7 +7,8 @@ const CONFIG = {
   songUrl: 'music/song.mp3',
   volume: 0.7,
 
-  // 하트가 완성된 뒤 편지 페이지로 넘어가기까지 기다리는 시간(초)
+  // 하트가 완성된 뒤 편지 페이지로 자동으로 넘어가기까지 기다리는 시간(초)
+  // 0 으로 두면 자동으로 넘어가지 않고 버튼을 눌러야만 넘어갑니다
   secondsBeforeLetter: 10,
 
   // 하트를 이루는 단어 개수(대략) 와 단어 묶음이 날아오는 간격(ms)
@@ -26,10 +27,10 @@ const LOVE_WORDS = [
   'Kocham cię', 'Miluji tě', 'Szeretlek', 'Te iubesc', 'Volim te', 'Rakastan sinua',
   'Ég elska þig', 'Nakupenda', 'Ngiyakuthanda', 'أحبك', 'אני אוהב אותך', 'ฉันรักคุณ',
   'मैं तुमसे प्यार करता हूँ', 'আমি তোমাকে ভালোবাসি', 'Saranghae', 'Ljubim te', 'Es tevi mīlu',
-  'Aš tave myliu', 'Ma armastan sind', 'Mina rakastan', 'Tha gaol agam ort', 'Rwy\'n dy garu di',
+  'Aš tave myliu', 'Ma armastan sind', 'Minä rakastan sinua', 'Tha gaol agam ort', 'Rwy\'n dy garu di',
   'Ich hab di gärn', 'Ek het jou lief', 'Men seni sevaman', 'Мен сені сүйемін', 'Би чамд хайртай',
   'Ես քեզ սիրում եմ', 'მიყვარხარ', 'Tôi yêu bạn', 'Sayang kamu', 'ຂ້ອຍຮັກເຈົ້າ', 'ខ្ញុំស្រលាញ់អ្នក',
-  'Ami tomake bhalobashi', 'Ngā aroha', 'Aloha wau iā ʻoe', 'Mi aime a ou', 'Ya tebya lyublyu',
+  'Ami tomake bhalobashi', 'Aroha ahau ki a koe', 'Aloha wau iā ʻoe', 'Mi aime a ou', 'Ya tebya lyublyu',
   'Kimi ga suki', 'Wo ai ni', 'Te quiero', 'Mi amas vin',
 ];
 
@@ -281,7 +282,7 @@ async function playHeart() {
   state.heartDone = true;
 
   // 완성 후 10초 뒤 편지 페이지로
-  if (state.page === 'heart') {
+  if (state.page === 'heart' && CONFIG.secondsBeforeLetter > 0) {
     state.autoTimer = setTimeout(() => showPage('letter'), CONFIG.secondsBeforeLetter * 1000);
   }
 }
@@ -331,16 +332,29 @@ async function typeLetter() {
       await sleep(CONFIG.typingMs * 6);
       continue;
     }
+    // 띄어쓰기 단위로 묶어서, 줄이 넘어갈 때 단어 중간이 끊기지 않게 합니다
+    let wordBox = null;
     for (const ch of text) {
+      if (ch === ' ') {
+        container.appendChild(document.createTextNode(' '));
+        wordBox = null;
+        await sleep(CONFIG.typingMs * 0.6);
+        continue;
+      }
+      if (!wordBox) {
+        wordBox = document.createElement('span');
+        wordBox.className = 'word';
+        container.appendChild(wordBox);
+      }
       const span = document.createElement('span');
-      span.className = 'ch' + (ch === ' ' ? ' space' : '');
+      span.className = 'ch';
       span.textContent = ch;
-      container.appendChild(span);
+      wordBox.appendChild(span);
       movePen(pen, span, paper);
       // 글이 아래로 길어지면 편지지를 따라 내려갑니다
       const sr = span.getBoundingClientRect(), pr = paper.getBoundingClientRect();
       if (sr.bottom > pr.bottom - 40) paper.scrollTop += sr.bottom - (pr.bottom - 40);
-      let delay = CONFIG.typingMs * (ch === ' ' ? 0.6 : isWide(ch) ? 1.15 : 0.8);
+      let delay = CONFIG.typingMs * (isWide(ch) ? 1.15 : 0.8);
       if (/[,.!?]/.test(ch)) delay += 260;
       await sleep(delay);
     }
