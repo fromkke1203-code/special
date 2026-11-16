@@ -23,6 +23,18 @@ const CONFIG = {
   photoFolder: 'photos',
   photoMax: 30,
   photoOpacity: 0.92,
+  // 사진 아래 흰 여백에 쓸 한 줄 메모. 순서대로 1번, 2번 … 사진. 비워 두면 메모 없음
+  photoCaptions: [
+    '',   // 1.jpg
+    '',   // 2.jpg
+    '',   // 3.jpg
+    '',   // 4.jpg
+    '',   // 5.jpg
+    '',   // 6.jpg
+  ],
+
+  // 편지가 다 써진 뒤 마지막에 나오는 한 줄
+  finaleText: '♥ 생일 축하해, 서연아 ♥',
 };
 
 /* 각 나라 말로 "사랑해" */
@@ -143,6 +155,13 @@ function placePhotos(field, imgs, keepOut, allowEdges) {
     const inner = document.createElement('div');
     inner.className = 'photo-inner';
     inner.appendChild(img);
+    const caption = (CONFIG.photoCaptions || [])[i];
+    if (caption) {
+      const cap = document.createElement('span');
+      cap.className = 'photo-caption';
+      cap.textContent = caption;
+      inner.appendChild(cap);
+    }
     wrap.appendChild(inner);
 
     let size = small ? rand(74, 96) : rand(110, 160);
@@ -475,8 +494,78 @@ async function playLetter() {
   expandPaper();                         // 편지지가 화면 가득
   await sleep(1200);
   await typeLetter();                    // 한 글자씩 손글씨
+  await sleep(500);
+  playFinale();                          // 하트 비 + 마지막 한 줄
   state.letterPlayed = true;
   state.letterPlaying = false;
+  $('replayBtn').hidden = false;
+}
+
+// 편지가 끝나면 화면 가득 하트가 흩날리고, 편지지 맨 아래에 마지막 한 줄이 떠오릅니다
+function playFinale() {
+  const rain = $('finaleRain');
+  rain.innerHTML = '';
+  const glyphs = ['♥', '♥', '♥', '♡', '✦', '❀'];
+  const colors = ['#ffb3d6', '#ff7fae', '#ff5b8d', '#ff3d78', '#ffd1e6'];
+  for (let i = 0; i < 70; i++) {
+    const sp = document.createElement('span');
+    sp.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
+    sp.style.setProperty('--x', rand(0, 100).toFixed(1) + 'vw');
+    sp.style.setProperty('--s', rand(12, 30).toFixed(0) + 'px');
+    sp.style.setProperty('--c', colors[Math.floor(Math.random() * colors.length)]);
+    sp.style.setProperty('--d', rand(3.5, 6.5).toFixed(1) + 's');
+    sp.style.setProperty('--delay', rand(0, 3.5).toFixed(2) + 's');
+    sp.style.setProperty('--spin', rand(-360, 360).toFixed(0) + 'deg');
+    sp.style.setProperty('--sway', rand(-60, 60).toFixed(0) + 'px');
+    rain.appendChild(sp);
+  }
+  setTimeout(() => { rain.innerHTML = ''; }, 11000);
+
+  if (CONFIG.finaleText) {
+    const body = $('letterBody');
+    const line = document.createElement('span');
+    line.className = 'finale-line';
+    line.textContent = CONFIG.finaleText;
+    body.appendChild(line);
+    const paper = $('letterPaper');
+    setTimeout(() => { paper.scrollTop = paper.scrollHeight; }, 50);
+  }
+}
+
+// 처음부터 다시 보기: 새로고침 없이 하트부터 다시 (노래는 끊기지 않음)
+function resetShow() {
+  clearTimeout(state.autoTimer);
+  $('finaleRain').innerHTML = '';
+  $('replayBtn').hidden = true;
+
+  // 하트
+  const stage = $('heartStage');
+  stage.innerHTML = '';
+  stage.classList.remove('is-complete');
+  $('birthdayText').classList.remove('is-shown');
+
+  // 편지: 편지지를 봉투 안 원래 자리로 되돌림
+  const envelope = $('envelope');
+  const scene = $('letterScene');
+  const paper = $('letterPaper');
+  scene.classList.remove('is-expanded');
+  envelope.classList.remove('is-open', 'is-out');
+  paper.style.transition = 'none';
+  paper.style.transform = '';
+  envelope.insertBefore(paper, envelope.querySelector('.envelope-side'));
+  paper.scrollTop = 0;
+  $('letterBody').innerHTML = '';
+  $('pen').classList.remove('is-writing');
+  paper.getBoundingClientRect();
+  paper.style.transition = '';
+
+  state.heartDone = false;
+  state.letterPlayed = false;
+  state.letterPlaying = false;
+
+  state.page = 'letter';
+  showPage('heart');
+  playHeart();
 }
 
 /* =========================================================
@@ -490,6 +579,7 @@ function showPage(name) {
   $('pageLetter').classList.toggle('is-active', name === 'letter');
   $('toLetterBtn').hidden = name !== 'heart';
   $('toHeartBtn').hidden = name !== 'letter';
+  $('replayBtn').hidden = !state.letterPlayed;
   if (name === 'letter') playLetter();   // 이미 다 썼으면 그대로 보여주기만
 }
 
@@ -589,5 +679,6 @@ window.addEventListener('DOMContentLoaded', () => {
   makeFloatingHearts();
   $('toLetterBtn').addEventListener('click', () => showPage('letter'));
   $('toHeartBtn').addEventListener('click', () => showPage('heart'));
+  $('replayBtn').addEventListener('click', resetShow);
   setupMusic();
 });
