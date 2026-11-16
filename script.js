@@ -17,6 +17,12 @@ const CONFIG = {
 
   // 편지 글씨가 써지는 속도(ms, 한 글자 기준)
   typingMs: 70,
+
+  // 하트 장면에 떠다니는 사진: photos 폴더에 1.jpg, 2.jpg, 3.jpg … 순서대로 넣으면 자동으로 찾습니다
+  // (jpg, jpeg, png 가능. 번호가 끊기는 곳까지 읽습니다. 최대 30장)
+  photoFolder: 'photos',
+  photoMax: 30,
+  photoOpacity: 0.92,
 };
 
 /* 각 나라 말로 "사랑해" */
@@ -92,6 +98,80 @@ function makeFloatingHearts() {
     s.style.setProperty('--spin', rand(-50, 50) + 'deg');
     box.appendChild(s);
   }
+}
+
+/* =========================================================
+   1페이지: 떠다니는 사진
+   ========================================================= */
+function loadImage(url) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = url;
+  });
+}
+
+// photos/1.jpg, 2.jpg … 를 번호가 끊길 때까지 찾습니다
+async function findPhotos() {
+  const found = [];
+  for (let i = 1; i <= CONFIG.photoMax; i++) {
+    let img = null;
+    for (const ext of ['jpg', 'jpeg', 'png', 'JPG', 'PNG']) {
+      img = await loadImage(`${CONFIG.photoFolder}/${i}.${ext}`);
+      if (img) break;
+    }
+    if (!img) break;
+    found.push(img);
+  }
+  return found;
+}
+
+async function startPhotos() {
+  const field = $('photoField');
+  const imgs = await findPhotos();
+  if (!imgs.length) return;
+  const small = Math.min(innerWidth, innerHeight) < 500;
+  const n = imgs.length;
+  const stage = $('heartStage').getBoundingClientRect();
+  const W = innerWidth;
+  imgs.forEach((img, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'photo';
+    const inner = document.createElement('div');
+    inner.className = 'photo-inner';
+    img.alt = '';
+    img.draggable = false;
+    inner.appendChild(img);
+    wrap.appendChild(inner);
+
+    const size = small ? rand(74, 96) : rand(110, 160);
+    // 하트 좌우의 빈 공간으로만 지나가게 자리 배정 (하트 글자를 가리지 않도록)
+    const leftRoom = stage.left - size - 8;
+    const rightRoom = W - stage.right - size - 8;
+    const sides = [];
+    if (leftRoom >= 0) sides.push('L');
+    if (rightRoom >= 0) sides.push('R');
+    let x, opacity = CONFIG.photoOpacity;
+    if (sides.length) {
+      const side = sides[i % sides.length];
+      x = side === 'L' ? rand(8, 8 + leftRoom) : rand(stage.right + 8, stage.right + 8 + rightRoom);
+    } else {
+      // 좁은 휴대폰: 양쪽 가장자리에 살짝 걸치게 하고 조금 투명하게
+      x = i % 2 === 0 ? rand(-size * 0.4, 0) : rand(W - size * 0.6, W - size * 0.35);
+      opacity = Math.min(opacity, 0.72);
+    }
+    const dur = rand(26, 40);
+    wrap.style.setProperty('--px', x.toFixed(0) + 'px');
+    wrap.style.setProperty('--size', size.toFixed(0) + 'px');
+    wrap.style.setProperty('--dur', dur.toFixed(1) + 's');
+    wrap.style.setProperty('--delay', (-(i / n) * dur).toFixed(1) + 's');   // 처음부터 여기저기 흩어져 있게
+    wrap.style.setProperty('--tilt', rand(-14, 14).toFixed(1) + 'deg');
+    wrap.style.setProperty('--sway', rand(3, 5.5).toFixed(1) + 's');
+    wrap.style.opacity = opacity;
+    field.appendChild(wrap);
+    requestAnimationFrame(() => wrap.classList.add('is-ready'));
+  });
 }
 
 /* =========================================================
@@ -266,6 +346,7 @@ window.addEventListener('orientationchange', () => setTimeout(sizeHeartWords, 30
 
 async function playHeart() {
   const stage = $('heartStage');
+  startPhotos();                         // 사진은 있으면 같이 떠다닙니다
   const els = buildHeart();
   // 1개, 2개, 3개 … 점점 많이 날아옵니다
   let i = 0, batch = 1;
