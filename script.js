@@ -127,35 +127,33 @@ async function findPhotos() {
   return found;
 }
 
-async function startPhotos() {
-  const field = $('photoField');
-  const imgs = await findPhotos();
-  if (!imgs.length) return;
+// 사진을 한 화면에 띄웁니다. keepOut: 사진이 피해 가야 할 가운데 영역 {left, right}
+function placePhotos(field, imgs, keepOut) {
   const small = Math.min(innerWidth, innerHeight) < 500;
   const n = imgs.length;
-  const stage = $('heartStage').getBoundingClientRect();
   const W = innerWidth;
-  imgs.forEach((img, i) => {
+  imgs.forEach((src, i) => {
+    const img = src.cloneNode();
+    img.alt = '';
+    img.draggable = false;
     const wrap = document.createElement('div');
     wrap.className = 'photo';
     const inner = document.createElement('div');
     inner.className = 'photo-inner';
-    img.alt = '';
-    img.draggable = false;
     inner.appendChild(img);
     wrap.appendChild(inner);
 
     const size = small ? rand(74, 96) : rand(110, 160);
-    // 하트 좌우의 빈 공간으로만 지나가게 자리 배정 (하트 글자를 가리지 않도록)
-    const leftRoom = stage.left - size - 8;
-    const rightRoom = W - stage.right - size - 8;
+    // 가운데(하트/편지지) 좌우의 빈 공간으로만 지나가게 자리 배정
+    const leftRoom = keepOut.left - size - 8;
+    const rightRoom = W - keepOut.right - size - 8;
     const sides = [];
     if (leftRoom >= 0) sides.push('L');
     if (rightRoom >= 0) sides.push('R');
     let x, opacity = CONFIG.photoOpacity;
     if (sides.length) {
       const side = sides[i % sides.length];
-      x = side === 'L' ? rand(8, 8 + leftRoom) : rand(stage.right + 8, stage.right + 8 + rightRoom);
+      x = side === 'L' ? rand(8, 8 + leftRoom) : rand(keepOut.right + 8, keepOut.right + 8 + rightRoom);
     } else {
       // 좁은 휴대폰: 양쪽 가장자리에 살짝 걸치게 하고 조금 투명하게
       x = i % 2 === 0 ? rand(-size * 0.4, 0) : rand(W - size * 0.6, W - size * 0.35);
@@ -172,6 +170,18 @@ async function startPhotos() {
     field.appendChild(wrap);
     requestAnimationFrame(() => wrap.classList.add('is-ready'));
   });
+}
+
+async function startPhotos() {
+  const imgs = await findPhotos();
+  if (!imgs.length) return;
+  // 1페이지: 하트 좌우
+  const stage = $('heartStage').getBoundingClientRect();
+  placePhotos($('photoField'), imgs, { left: stage.left, right: stage.right });
+  // 2페이지: 펼쳐진 편지지 좌우 (편지지 폭 = min(92vw, 560px), 가운데 정렬)
+  const paperW = Math.min(innerWidth * 0.92, 560);
+  const left = (innerWidth - paperW) / 2;
+  placePhotos($('photoFieldLetter'), imgs, { left, right: left + paperW });
 }
 
 /* =========================================================
