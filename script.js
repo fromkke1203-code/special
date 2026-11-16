@@ -374,21 +374,19 @@ function showPage(name) {
 function setupMusic() {
   const audio = $('bgm');
   const soundBtn = $('soundBtn');
+  const overlay = $('startOverlay');
   let started = false;
+  let musicOk = !!CONFIG.songUrl;
 
-  const begin = () => { if (!started) { started = true; playHeart(); } };
+  const begin = () => { if (!started) { started = true; overlay.hidden = true; $('nav').hidden = false; playHeart(); } };
 
-  if (!CONFIG.songUrl) { begin(); return; }
-
-  audio.src = CONFIG.songUrl;
-  audio.volume = CONFIG.volume;
-
-  const onMusic = () => {
-    state.musicOn = true;
-    soundBtn.hidden = false;
-    $('startOverlay').hidden = true;
-    begin();
-  };
+  if (CONFIG.songUrl) {
+    // 하트를 누르기 전에 미리 받아 두어 누르는 순간 바로 나오게 합니다
+    audio.src = CONFIG.songUrl;
+    audio.volume = CONFIG.volume;
+    audio.load();
+    audio.addEventListener('error', () => { musicOk = false; });   // 파일이 없으면 노래 없이 진행
+  }
 
   soundBtn.addEventListener('click', () => {
     audio.muted = !audio.muted;
@@ -396,24 +394,16 @@ function setupMusic() {
     soundBtn.setAttribute('aria-label', audio.muted ? '소리 켜기' : '소리 끄기');
   });
 
-  // 노래 파일을 못 찾으면(404 등) 노래 없이 바로 시작
-  audio.addEventListener('error', () => { $('startOverlay').hidden = true; begin(); });
-
-  // 노래 파일을 못 찾아도 2.5초 뒤에는 그냥 시작
-  const fallback = setTimeout(begin, 2500);
-
-  audio.play().then(() => { clearTimeout(fallback); onMusic(); }).catch((err) => {
-    clearTimeout(fallback);
-    if (err && err.name === 'NotAllowedError') {
-      // 브라우저가 자동재생을 막음 → 한 번 눌러서 시작
-      $('startOverlay').hidden = false;
-      $('startBtn').addEventListener('click', () => {
-        audio.play().then(onMusic).catch(() => { $('startOverlay').hidden = true; begin(); });
-      }, { once: true });
-    } else {
-      begin();                            // 파일이 없거나 재생 불가 → 노래 없이 진행
+  // 하트를 누르는 순간: 그 터치 덕분에 브라우저가 소리를 허용 → 노래 시작 + 하트 시작
+  $('startBtn').addEventListener('click', () => {
+    if (musicOk) {
+      audio.play().then(() => {
+        state.musicOn = true;
+        soundBtn.hidden = false;
+      }).catch(() => { /* 노래가 안 되면 조용히 진행 */ });
     }
-  });
+    begin();
+  }, { once: true });
 }
 
 /* =========================================================

@@ -15,12 +15,24 @@
   <!-- 배경에 떠다니는 작은 하트 -->
   <div class="floating-hearts" id="floatingHearts" aria-hidden="true"></div>
 
-  <!-- 노래 자동재생이 막혔을 때만 보이는 시작 화면 -->
-  <div class="start-overlay" id="startOverlay" hidden>
-    <button class="start-btn" id="startBtn" type="button">
-      <span class="start-heart">💝</span>
-      <span>눌러서 열어보기</span>
+  <!-- 시작 화면: 하트를 누르면 노래와 함께 시작 -->
+  <div class="start-overlay" id="startOverlay">
+    <p class="start-title">서연이에게 온 선물</p>
+    <button class="start-heart-btn" id="startBtn" type="button" aria-label="하트를 눌러 선물 열기">
+      <svg class="start-heart-svg" viewBox="0 0 100 92" aria-hidden="true">
+        <defs>
+          <radialGradient id="heartGrad" cx="50%" cy="45%" r="60%">
+            <stop offset="0%" stop-color="#ffb3d6"/>
+            <stop offset="55%" stop-color="#ff5b8d"/>
+            <stop offset="100%" stop-color="#e0003a"/>
+          </radialGradient>
+        </defs>
+        <path d="M50 88 C20 66 2 50 2 29 C2 14 13 3 27 3 C37 3 45 9 50 17 C55 9 63 3 73 3 C87 3 98 14 98 29 C98 50 80 66 50 88 Z" fill="url(#heartGrad)"/>
+        <ellipse cx="33" cy="24" rx="9" ry="5" fill="rgba(255,255,255,0.35)" transform="rotate(-30 33 24)"/>
+      </svg>
+      <span class="start-heart-label">눌러줘</span>
     </button>
+    <p class="start-hint">하트를 누르면 선물이 열려요 🎁</p>
   </div>
 
   <!-- 1페이지: 하트 -->
@@ -50,7 +62,7 @@
   </section>
 
   <!-- 페이지 이동 버튼 -->
-  <nav class="nav">
+  <nav class="nav" id="nav" hidden>
     <button class="nav-btn" id="toLetterBtn" type="button">편지 보기 →</button>
     <button class="nav-btn" id="toHeartBtn" type="button" hidden>← 하트 보기</button>
   </nav>
