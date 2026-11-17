@@ -504,7 +504,15 @@ async function playLetter() {
   if (state.letterPlayed || state.letterPlaying) return;
   state.letterPlaying = true;
   const envelope = $('envelope');
-  await sleep(700);
+  await sleep(1600);                     // 주소 면(보내는 사람·받는 사람)을 잠시 보여 줌
+  envelope.classList.add('is-flipping-out');
+  await sleep(500);
+  envelope.classList.remove('is-flipping-out');
+  envelope.classList.add('is-flipped');  // 옆면이 된 순간 앞면을 치움
+  envelope.classList.add('is-flipping-in');
+  await sleep(500);
+  envelope.classList.remove('is-flipping-in');
+  await sleep(500);
   envelope.classList.add('is-open');     // 봉투 뚜껑 열림
   await sleep(1100);
   envelope.classList.add('is-out');      // 편지지가 위로 나옴
@@ -569,7 +577,7 @@ function resetShow() {
   const scene = $('letterScene');
   const paper = $('letterPaper');
   scene.classList.remove('is-expanded');
-  envelope.classList.remove('is-open', 'is-out');
+  envelope.classList.remove('is-open', 'is-out', 'is-flipped', 'is-flipping-out', 'is-flipping-in');
   paper.style.transition = 'none';
   paper.style.transform = '';
   envelope.insertBefore(paper, envelope.querySelector('.envelope-side'));
