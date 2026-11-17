@@ -172,6 +172,7 @@ body {
   animation: photoRise var(--dur) linear infinite;
   animation-delay: var(--delay);
   will-change: transform;
+  contain: layout paint;
 }
 .photo.is-ready { opacity: 1; }
 .photo-inner {
@@ -236,8 +237,7 @@ body {
   white-space: nowrap;
   line-height: 1;
   opacity: 0;
-  will-change: transform, opacity;
-  text-shadow: 0 0 14px rgba(255, 90, 140, 0.35);
+  text-shadow: 0 0 10px rgba(255, 90, 140, 0.35);
   user-select: none;
   transform: translate(-50%, -50%) translate(var(--fx), var(--fy)) rotate(var(--fr)) scale(0.4);
 }
@@ -248,6 +248,7 @@ body {
 }
 .heart-stage.is-complete {
   animation: heartbeat 1.6s ease-in-out infinite;
+  will-change: transform;          /* 글자 80개를 매번 다시 그리지 않고 한 장으로 움직이게 */
 }
 @keyframes heartbeat {
   0%, 100% { transform: scale(1); }

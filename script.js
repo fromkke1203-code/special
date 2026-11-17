@@ -668,9 +668,27 @@ function setupMusic() {
   document.addEventListener('touchend', wake, { passive: true });
   document.addEventListener('click', wake);
 
+  // 노래 파일을 통째로 먼저 받아 둡니다. 받는 도중에 재생하면 중간에 끊길 수 있어서,
+  // 다 받은 뒤 그 파일로 재생하면 버퍼링 없이 매끄럽게 이어집니다.
+  const hint = document.querySelector('.start-hint');
+  const hintText = hint ? hint.textContent : '';
+  let songBlobUrl = null;
+  let songFailed = false;
   if (CONFIG.songUrl) {
-    audio.src = CONFIG.songUrl;        // 하트를 누르기 전에 미리 받아 둡니다
-    audio.load();
+    if (hint) hint.textContent = '노래를 준비하고 있어요…';
+    fetch(CONFIG.songUrl)
+      .then((r) => { if (!r.ok) throw new Error(r.status); return r.blob(); })
+      .then((blob) => {
+        songBlobUrl = URL.createObjectURL(blob);
+        if (!started) { audio.src = songBlobUrl; audio.load(); }
+        if (hint) hint.textContent = hintText;
+      })
+      .catch(() => {
+        // 통째로 못 받으면(옛 브라우저 등) 예전처럼 흘려 받으며 재생
+        songFailed = true;
+        if (!started) { audio.src = CONFIG.songUrl; audio.load(); }
+        if (hint) hint.textContent = hintText;
+      });
     audio.addEventListener('error', () => { musicOk = false; });
   }
 
@@ -699,6 +717,7 @@ function setupMusic() {
   // 하트를 누르는 순간: 그 터치 덕분에 브라우저가 소리를 허용 → 노래 시작 + 하트 시작
   $('startBtn').addEventListener('click', () => {
     if (musicOk) {
+      if (!audio.src) audio.src = songBlobUrl || CONFIG.songUrl;   // 아직 못 받았으면 흘려 받으며 재생
       connectGain();
       setVolume(slider.value / 100);
       audio.play().then(() => {
